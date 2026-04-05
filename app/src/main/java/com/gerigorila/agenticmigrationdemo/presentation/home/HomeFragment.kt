@@ -9,9 +9,7 @@ import androidx.fragment.app.Fragment
 import com.gerigorila.agenticmigrationdemo.R
 import com.gerigorila.agenticmigrationdemo.presentation.productlist.ProductListFragment
 
-class HomeFragment : Fragment(), HomeContract.View {
-
-    private lateinit var presenter: HomePresenter
+class HomeFragment : Fragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -21,14 +19,13 @@ class HomeFragment : Fragment(), HomeContract.View {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        presenter = HomePresenter(this)
 
         view.findViewById<Button>(R.id.btn_start).setOnClickListener {
-            presenter.onStartClicked()
+            navigateToProductList()
         }
     }
 
-    override fun navigateToProductList() {
+    private fun navigateToProductList() {
         requireActivity().supportFragmentManager
             .beginTransaction()
             .replace(R.id.fragment_container, ProductListFragment())
