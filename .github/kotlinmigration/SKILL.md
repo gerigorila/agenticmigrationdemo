@@ -145,32 +145,9 @@ String.format(Locale.US, "$%.2f", product.price)
 
 ## Build Config Change
 
-Add Kotlin plugin to `app/build.gradle.kts`:
-
-```kotlin
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android) // add this
-}
-```
-
-Add to `gradle/libs.versions.toml`:
-
-```toml
-[versions]
-kotlin = "2.1.20"
-
-[plugins]
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-```
-
-Add `kotlinOptions` to `app/build.gradle.kts` android block:
-
-```kotlin
-kotlinOptions {
-    jvmTarget = "11"
-}
-```
+AGP 9.x bundles the Kotlin compiler — no separate Kotlin plugin is needed.
+The `compileOptions` block already sets Java 11 compatibility for Kotlin too.
+No changes required to `build.gradle.kts` or `libs.versions.toml`.
 
 ## Gotchas
 
