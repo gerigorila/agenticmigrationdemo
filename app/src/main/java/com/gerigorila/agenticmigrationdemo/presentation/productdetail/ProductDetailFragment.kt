@@ -7,15 +7,20 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.gerigorila.agenticmigrationdemo.R
-import com.gerigorila.agenticmigrationdemo.data.repository.ProductRepository
-import com.gerigorila.agenticmigrationdemo.domain.model.Product
 import com.google.android.material.appbar.MaterialToolbar
+import kotlinx.coroutines.launch
 import java.util.Locale
 
-class ProductDetailFragment : Fragment(), ProductDetailContract.View {
+class ProductDetailFragment : Fragment() {
 
-    private lateinit var presenter: ProductDetailPresenter
+    private val viewModel: ProductDetailViewModel by lazy {
+        ViewModelProvider(this)[ProductDetailViewModel::class.java]
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,24 +37,23 @@ class ProductDetailFragment : Fragment(), ProductDetailContract.View {
             requireActivity().supportFragmentManager.popBackStack()
         }
 
-        presenter = ProductDetailPresenter(this, ProductRepository())
-
         val productId = requireArguments().getInt(ARG_PRODUCT_ID)
-        presenter.loadProduct(productId)
-    }
+        viewModel.loadProduct(productId)
 
-    override fun showProduct(product: Product) {
-        val view = view ?: return
-
-        view.findViewById<MaterialToolbar>(R.id.toolbar).title = product.name
-        view.findViewById<TextView>(R.id.txt_name).text = product.name
-        view.findViewById<TextView>(R.id.txt_price).text =
-            String.format(Locale.US, "$%.2f", product.price)
-        view.findViewById<TextView>(R.id.txt_description).text = product.description
-    }
-
-    override fun showError(message: String) {
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.product.collect { product ->
+                    if (product != null) {
+                        toolbar.title = product.name
+                        view.findViewById<TextView>(R.id.txt_name).text = product.name
+                        view.findViewById<TextView>(R.id.txt_price).text =
+                            String.format(Locale.US, "$%.2f", product.price)
+                        view.findViewById<TextView>(R.id.txt_description).text =
+                            product.description
+                    }
+                }
+            }
+        }
     }
 
     companion object {
