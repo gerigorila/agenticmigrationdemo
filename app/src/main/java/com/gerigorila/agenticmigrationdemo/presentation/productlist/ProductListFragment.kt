@@ -5,17 +5,22 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.gerigorila.agenticmigrationdemo.R
-import com.gerigorila.agenticmigrationdemo.data.repository.ProductRepository
-import com.gerigorila.agenticmigrationdemo.domain.model.Product
 import com.gerigorila.agenticmigrationdemo.presentation.productdetail.ProductDetailFragment
+import kotlinx.coroutines.launch
 
-class ProductListFragment : Fragment(), ProductListContract.View {
+class ProductListFragment : Fragment() {
 
-    private lateinit var presenter: ProductListPresenter
     private lateinit var adapter: ProductAdapter
+    private val viewModel: ProductListViewModel by lazy {
+        ViewModelProvider(this)[ProductListViewModel::class.java]
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -33,15 +38,16 @@ class ProductListFragment : Fragment(), ProductListContract.View {
         recycler.layoutManager = LinearLayoutManager(requireContext())
         recycler.adapter = adapter
 
-        presenter = ProductListPresenter(this, ProductRepository())
-        presenter.loadProducts()
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.products.collect { products ->
+                    adapter.setProducts(products)
+                }
+            }
+        }
     }
 
-    override fun showProducts(products: List<Product>) {
-        adapter.setProducts(products)
-    }
-
-    override fun navigateToProductDetail(productId: Int) {
+    private fun navigateToProductDetail(productId: Int) {
         val fragment = ProductDetailFragment.newInstance(productId)
         requireActivity().supportFragmentManager
             .beginTransaction()
